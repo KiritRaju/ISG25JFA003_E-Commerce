@@ -61,7 +61,6 @@ class UserServiceImplTest {
         userRequestDTO.setName("testUser");
         userRequestDTO.setEmail("test@example.com");
         userRequestDTO.setPassword("password123");
-        userRequestDTO.setRole("USER");
 
         userResponseDTO = new UserResponseDTO();
         userResponseDTO.setId(1L);

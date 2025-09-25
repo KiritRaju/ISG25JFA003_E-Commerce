@@ -6,6 +6,7 @@ import com.cognizant.ecommerce.dao.ProductRepository;
 import com.cognizant.ecommerce.dao.UserRepository;
 import com.cognizant.ecommerce.dto.cartItem.CartItemRequestDTO;
 import com.cognizant.ecommerce.dto.cartItem.CartItemResponseDTO;
+import com.cognizant.ecommerce.exception.BadRequestException;
 import com.cognizant.ecommerce.exception.ResourceNotFoundException;
 import com.cognizant.ecommerce.model.Cart;
 import com.cognizant.ecommerce.model.CartItem;
@@ -37,6 +38,19 @@ public class CartItemServiceImpl implements CartItemService {
     @Override
     @Transactional
     public CartItemResponseDTO createCartItem(Long userId, CartItemRequestDTO cartItemRequestDTO) {
+
+        //NULL CHECK
+        if (cartItemRequestDTO == null) {
+            throw new BadRequestException("Request body must not be null or empty.");
+        }
+
+        // --- ADDED VALIDATION FOR QUANTITY AND PRODUCT ID ---
+        if (cartItemRequestDTO.getQuantity() < 1) {
+            throw new BadRequestException("Quantity must be at least 1.");
+        }
+        if (cartItemRequestDTO.getProductId() < 1) {
+            throw new BadRequestException("Product ID must be greater than 0.");
+        }
 
         // Step 1: Find the product and perform initial checks
         Product product = productRepository.findById(cartItemRequestDTO.getProductId())
@@ -97,10 +111,28 @@ public class CartItemServiceImpl implements CartItemService {
     @Override
     @Transactional
     public CartItemResponseDTO updateCartItem(Long id, CartItemRequestDTO cartItemRequestDTO) {
+
+        //NULL CHECK
+        if (cartItemRequestDTO == null) {
+            throw new BadRequestException("Request body must not be null or empty.");
+        }
+
+        // --- ADDED VALIDATION FOR QUANTITY AND PRODUCT ID ---
+        if (cartItemRequestDTO.getProductId() < 1) {
+            throw new BadRequestException("Product ID must be greater than 0.");
+        }
+
         CartItem existingCartItem = cartItemRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("CartItem not found with ID: " + id));
 
         Product product = existingCartItem.getProduct();
+
+        // If quantity is less than 1, delete the cart item and (optionally) return null or throw an exception
+        if (cartItemRequestDTO.getQuantity() < 1) {
+            cartItemRepository.deleteById(id);
+            throw new BadRequestException("Quantity must be at least 1."); // Or return null if you want, but exception is more RESTful
+        }
+
         if (cartItemRequestDTO.getQuantity() > product.getQuantity()) {
             throw new ResourceNotFoundException("Insufficient stock for product '" + product.getName() + "'. Available stock: " + product.getQuantity());
         }
