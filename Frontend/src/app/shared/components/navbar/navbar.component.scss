@@ -42,8 +42,13 @@
 
 .fa-user-circle,
 .fa-shopping-cart {
+<<<<<<< HEAD
   color: #fff;
   font-size: 1.8rem;
+=======
+  color: #666 !important;
+  font-size: 1.5rem;
+>>>>>>> ceacea42fc845be1ac0189c573553659e9f6c68c
   margin-left: 1rem;
 }
 
@@ -128,7 +133,10 @@
     font-size: 1.5rem !important;
     letter-spacing: 1px !important;
     text-transform: uppercase !important;
+<<<<<<< HEAD
     padding: 0.5rem 1rem !important;
+=======
+>>>>>>> ceacea42fc845be1ac0189c573553659e9f6c68c
     margin-right: 2rem !important;
     transition: all 1s ease-in-out !important;
 }
@@ -209,8 +217,13 @@
 
 /* Icon buttons */
 .nav-icon-button {
+<<<<<<< HEAD
     width: 40px !important;
     height: 40px !important;
+=======
+    width: 100px !important;
+    height: 100px !important;
+>>>>>>> ceacea42fc845be1ac0189c573553659e9f6c68c
     border-radius: 50% !important;
     background: rgba(0, 0, 0, 0.3) !important;
     border: 1px solid rgba(255, 255, 255, 0.1) !important;
@@ -231,4 +244,13 @@
 .navbar-nav {
     align-items: center !important;
     transition: all 0.5s !important;
+<<<<<<< HEAD
+=======
+}
+
+.navbar-logo {
+  height: 40px !important;
+  width: auto !important;
+  filter: brightness(100%) invert(0) saturate(150%) !important;
+>>>>>>> ceacea42fc845be1ac0189c573553659e9f6c68c
 }

@@ -2,11 +2,22 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { CartService } from '../../../core/services/cart.service';
 import { CartResponse, CartItemResponse, CartItemRequest } from '../../../core/models/cart';
+<<<<<<< HEAD
+=======
+import { MatDialog, MatDialogModule } from '@angular/material/dialog'; // Import MatDialog and MatDialogModule
+import { CheckoutDialogComponent } from '../components/checkout-dialog/checkout-dialog.component'; // Import CheckoutDialogComponent
+import { Router } from '@angular/router'; // Import Router
+import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar'; // Import MatSnackBar and MatSnackBarModule
+>>>>>>> ceacea42fc845be1ac0189c573553659e9f6c68c
 
 @Component({
   selector: 'app-cart',
   standalone: true,
+<<<<<<< HEAD
   imports: [CommonModule],
+=======
+  imports: [CommonModule, MatDialogModule, MatSnackBarModule], // Add MatSnackBarModule to imports
+>>>>>>> ceacea42fc845be1ac0189c573553659e9f6c68c
   templateUrl: './component.html'
 })
 export class CartComponent implements OnInit {
@@ -14,7 +25,16 @@ export class CartComponent implements OnInit {
   isLoading = true;
   error: string | null = null;
   
+<<<<<<< HEAD
   constructor(private cartService: CartService) { }
+=======
+  constructor(
+    private cartService: CartService,
+    private dialog: MatDialog,
+    private router: Router,
+    private snackBar: MatSnackBar // Inject MatSnackBar
+  ) { }
+>>>>>>> ceacea42fc845be1ac0189c573553659e9f6c68c
 
   ngOnInit(): void {
     this.loadCart();
@@ -61,7 +81,11 @@ export class CartComponent implements OnInit {
           this.recalculateCartTotal();
         }
       },
+<<<<<<< HEAD
       error: (err) => { 
+=======
+      error: (err) => {
+>>>>>>> ceacea42fc845be1ac0189c573553659e9f6c68c
         this.error = 'Failed to remove item.'; 
         console.error('Error removing item:', err);
       }
@@ -73,7 +97,11 @@ export class CartComponent implements OnInit {
     const newQuantity = parseInt(inputElement.value, 10);
 
     if (isNaN(newQuantity) || newQuantity < 1) {
+<<<<<<< HEAD
       alert('Quantity must be a positive number.');
+=======
+      this.snackBar.open('Quantity must be a positive number.', 'Dismiss', { duration: 3000 });
+>>>>>>> ceacea42fc845be1ac0189c573553659e9f6c68c
       inputElement.value = item.quantity.toString();
       return;
     }
@@ -92,7 +120,11 @@ export class CartComponent implements OnInit {
         }
       },
       error: (err) => {
+<<<<<<< HEAD
         alert('Failed to update quantity. The item may be out of stock.');
+=======
+        this.snackBar.open('Failed to update quantity. The item may be out of stock.', 'Dismiss', { duration: 3000 });
+>>>>>>> ceacea42fc845be1ac0189c573553659e9f6c68c
         inputElement.value = item.quantity.toString(); // Reset the input value
       }
     });
@@ -116,6 +148,24 @@ export class CartComponent implements OnInit {
     });
   }
 
+<<<<<<< HEAD
+=======
+  openCheckoutDialog(): void {
+    const dialogRef = this.dialog.open(CheckoutDialogComponent, {
+      width: '600px',
+      disableClose: true // Prevent closing by clicking outside or pressing escape
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result === 'orderPlaced') {
+        // Order was successfully placed, navigate to orders page
+        this.router.navigate(['/orders']);
+      }
+      // If dialog was cancelled or closed without placing order, do nothing
+    });
+  }
+
+>>>>>>> ceacea42fc845be1ac0189c573553659e9f6c68c
   private recalculateCartTotal(): void {
     if (this.cart) {
       this.cart.totalPrice = this.cart.items.reduce((total, item) => {
