@@ -1,61 +1,157 @@
 <div class="container mt-4">
-  <h3>{{ isEditMode ? 'Edit Product' : 'Add New Product' }}</h3>
-  <form (ngSubmit)="onSubmit()">
-    
-    <!-- Product Name -->
-    <div class="mb-3">
-      <label for="name" class="form-label">Product Name</label>
-      <input type="text" id="name" class="form-control" [(ngModel)]="product.name" name="name" required>
-    </div>
-    
-    <!-- Description -->
-    <div class="mb-3">
-      <label for="description" class="form-label">Description</label>
-      <textarea id="description" class="form-control" [(ngModel)]="product.description" name="description" required></textarea>
-    </div>
-    
-    <!-- Price -->
-    <div class="mb-3">
-      <label for="price" class="form-label">Price</label>
-      <input type="number" id="price" class="form-control" [(ngModel)]="product.price" name="price" required>
-    </div>
-    
-    <!-- Image URL -->
-    <div class="mb-3">
-      <label for="image_url" class="form-label">Image URL</label>
-      <input type="url" id="image_url" class="form-control" [(ngModel)]="product.image_url" name="image_url" placeholder="https://example.com/image.jpg" required>
-      <small class="form-text text-muted">Enter the URL of the product image</small>
-    </div>
+  <div class="row justify-content-center">
+    <div class="col-md-8">
+      <div class="card shadow">
+        <div class="card-header">
+          <h2 class="mb-0">{{ isEditMode ? 'Edit Product' : 'Add New Product' }}</h2>
+        </div>
+        <div class="card-body">
+          <form [formGroup]="productForm" (ngSubmit)="onSubmit()">
+            
+            <!-- Product Name -->
+            <div class="mb-3">
+              <label for="name" class="form-label">Product Name <span class="text-danger">*</span></label>
+              <input 
+                type="text" 
+                id="name" 
+                class="form-control" 
+                formControlName="name"
+                [class.is-invalid]="submitted && f['name'].errors"
+              >
+              <div *ngIf="submitted && f['name'].errors" class="invalid-feedback">
+                <div *ngIf="f['name'].errors['required']">Product name is required</div>
+                <div *ngIf="f['name'].errors['minlength']">Product name must be at least 3 characters</div>
+                <div *ngIf="f['name'].errors['maxlength']">Product name cannot exceed 100 characters</div>
+              </div>
+            </div>
+            
+            <!-- Description -->
+            <div class="mb-3">
+              <label for="description" class="form-label">Description <span class="text-danger">*</span></label>
+              <textarea 
+                id="description" 
+                class="form-control" 
+                formControlName="description"
+                rows="3"
+                [class.is-invalid]="submitted && f['description'].errors"
+              ></textarea>
+              <div *ngIf="submitted && f['description'].errors" class="invalid-feedback">
+                <div *ngIf="f['description'].errors['required']">Description is required</div>
+                <div *ngIf="f['description'].errors['minlength']">Description must be at least 10 characters</div>
+                <div *ngIf="f['description'].errors['maxlength']">Description cannot exceed 500 characters</div>
+              </div>
+            </div>
+            
+            <!-- Price -->
+            <div class="mb-3">
+              <label for="price" class="form-label">Price (₹) <span class="text-danger">*</span></label>
+              <input 
+                type="number" 
+                id="price" 
+                class="form-control" 
+                formControlName="price"
+                step="0.01"
+                [class.is-invalid]="submitted && f['price'].errors"
+              >
+              <div *ngIf="submitted && f['price'].errors" class="invalid-feedback">
+                <div *ngIf="f['price'].errors['required']">Price is required</div>
+                <div *ngIf="f['price'].errors['min']">Price must be at least ₹0.01</div>
+                <div *ngIf="f['price'].errors['max']">Price cannot exceed ₹1,000,000</div>
+              </div>
+            </div>
+            
+            <!-- Image URL -->
+            <div class="mb-3">
+              <label for="image_url" class="form-label">Image URL <span class="text-danger">*</span></label>
+              <input 
+                type="url" 
+                id="image_url" 
+                class="form-control" 
+                formControlName="image_url"
+                placeholder="https://example.com/image.jpg"
+                [class.is-invalid]="submitted && f['image_url'].errors"
+              >
+              <small class="form-text text-muted">Enter a valid URL starting with http:// or https://</small>
+              <div *ngIf="submitted && f['image_url'].errors" class="invalid-feedback">
+                <div *ngIf="f['image_url'].errors['required']">Image URL is required</div>
+                <div *ngIf="f['image_url'].errors['pattern']">Please enter a valid URL starting with http:// or https://</div>
+              </div>
+            </div>
 
-    <!-- Image Preview -->
-    <div class="mb-3" *ngIf="product.image_url">
-      <label class="form-label">Image Preview</label>
-      <div class="border rounded p-2 text-center bg-light">
-        <img [src]="product.image_url" [alt]="product.name" class="img-fluid" style="max-height: 200px; object-fit: contain;" 
-             onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
-        <div style="display: none;" class="text-danger">
-          <i class="bi bi-exclamation-triangle"></i> Invalid image URL
+            <!-- Image Preview -->
+            <div class="mb-3" *ngIf="f['image_url'].value">
+              <label class="form-label">Image Preview</label>
+              <div class="border rounded p-2 text-center bg-light">
+                <img 
+                  [src]="f['image_url'].value" 
+                  [alt]="f['name'].value" 
+                  class="img-fluid" 
+                  style="max-height: 200px; object-fit: contain;" 
+                  onerror="this.style.display='none'; this.nextElementSibling.style.display='block';"
+                >
+                <div style="display: none;" class="text-danger">
+                  <i class="bi bi-exclamation-triangle"></i> Invalid image URL or image cannot be loaded
+                </div>
+              </div>
+            </div>
+            
+            <!-- Quantity -->
+            <div class="mb-3">
+              <label for="quantity" class="form-label">Quantity <span class="text-danger">*</span></label>
+              <input 
+                type="number" 
+                id="quantity" 
+                class="form-control" 
+                formControlName="quantity"
+                [class.is-invalid]="submitted && f['quantity'].errors"
+              >
+              <div *ngIf="submitted && f['quantity'].errors" class="invalid-feedback">
+                <div *ngIf="f['quantity'].errors['required']">Quantity is required</div>
+                <div *ngIf="f['quantity'].errors['min']">Quantity cannot be negative</div>
+                <div *ngIf="f['quantity'].errors['max']">Quantity cannot exceed 10,000</div>
+              </div>
+            </div>
+            
+            <!-- Category Dropdown -->
+            <div class="mb-3">
+              <label for="category" class="form-label">Category <span class="text-danger">*</span></label>
+              <select 
+                id="category" 
+                class="form-control" 
+                formControlName="categoryId"
+                [class.is-invalid]="submitted && f['categoryId'].errors"
+              >
+                <option [ngValue]="0" disabled>Select a Category</option>
+                <option *ngFor="let category of categories" [ngValue]="category.id">{{ category.name }}</option>
+              </select>
+              <div *ngIf="submitted && f['categoryId'].errors" class="invalid-feedback">
+                <div *ngIf="f['categoryId'].errors['required'] || f['categoryId'].errors['min']">Please select a category</div>
+              </div>
+            </div>
+            
+            <!-- Status (Active/Inactive) -->
+            <div class="mb-3 form-check">
+              <input 
+                type="checkbox" 
+                class="form-check-input" 
+                id="isActive" 
+                formControlName="isActive"
+              >
+              <label class="form-check-label" for="isActive">Active Product</label>
+            </div>
+            
+            <!-- Submit and Cancel Buttons -->
+            <div class="d-flex gap-2">
+              <button type="submit" class="btn btn-success">
+                <i class="bi bi-check-circle"></i> {{ isEditMode ? 'Update Product' : 'Create Product' }}
+              </button>
+              <button type="button" class="btn btn-secondary" (click)="onCancel()">
+                <i class="bi bi-x-circle"></i> Cancel
+              </button>
+            </div>
+          </form>
         </div>
       </div>
     </div>
-    
-    <!-- Quantity -->
-    <div class="mb-3">
-      <label for="quantity" class="form-label">Quantity</label>
-      <input type="number" id="quantity" class="form-control" [(ngModel)]="product.quantity" name="quantity" required>
-    </div>
-    
-    <!-- Category Dropdown -->
-    <div class="mb-3">
-      <label for="category" class="form-label">Category</label>
-      <select id="category" class="form-control" [(ngModel)]="product.categoryId" name="categoryId" required>
-        <option [ngValue]="0" disabled>Select a Category</option>
-        <option *ngFor="let category of categories" [ngValue]="category.id">{{ category.name }}</option>
-      </select>
-    </div>
-    
-    <!-- Submit Button -->
-    <button type="submit" class="btn btn-success">{{ isEditMode ? 'Update Product' : 'Create Product' }}</button>
-    <button type="button" class="btn btn-secondary ms-2" (click)="onCancel()">Cancel</button>
-  </form>
+  </div>
 </div>
