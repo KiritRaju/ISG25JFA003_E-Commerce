@@ -1,0 +1,93 @@
+<div class="container mt-4">
+  <div class="row justify-content-center">
+    <div class="col-md-8">
+      <div class="card shadow">
+        <div class="card-header">
+          <h2 class="mb-0">{{ isEditMode ? 'Edit Category' : 'Add New Category' }}</h2>
+        </div>
+        <div class="card-body">
+          <form [formGroup]="categoryForm" (ngSubmit)="onSubmit()">
+            
+            <!-- Category Name -->
+            <div class="mb-3">
+              <label for="name" class="form-label">Category Name <span class="text-danger">*</span></label>
+              <input 
+                type="text"
+                id="name" 
+                class="form-control" 
+                formControlName="name"
+                [class.is-invalid]="submitted && f['name'].errors"
+              >
+              <div *ngIf="submitted && f['name'].errors" class="invalid-feedback">
+                <div *ngIf="f['name'].errors['required']">Category name is required</div>
+                <div *ngIf="f['name'].errors['minlength']">Category name must be at least 3 characters</div>
+                <div *ngIf="f['name'].errors['maxlength']">Category name cannot exceed 50 characters</div>
+              </div>
+            </div>
+            
+            <!-- Description -->
+            <div class="mb-3">
+              <label for="description" class="form-label">Description <span class="text-danger">*</span></label>
+              <textarea 
+                id="description" 
+                class="form-control" 
+                formControlName="description"
+                rows="3"
+                [class.is-invalid]="submitted && f['description'].errors"
+              ></textarea>
+              <div *ngIf="submitted && f['description'].errors" class="invalid-feedback">
+                <div *ngIf="f['description'].errors['required']">Description is required</div>
+                <div *ngIf="f['description'].errors['minlength']">Description must be at least 10 characters</div>
+                <div *ngIf="f['description'].errors['maxlength']">Description cannot exceed 200 characters</div>
+              </div>
+            </div>
+            
+            <!-- Image URL -->
+            <div class="mb-3">
+              <label for="imageUrl" class="form-label">Image URL</label>
+              <input 
+                type="url"
+                id="imageUrl" 
+                class="form-control" 
+                formControlName="imageUrl"
+                placeholder="https://example.com/image.jpg"
+                [class.is-invalid]="submitted && f['imageUrl'].errors"
+              >
+              <small class="form-text text-muted">Enter a valid URL starting with http:// or https:// (optional)</small>
+              <div *ngIf="submitted && f['imageUrl'].errors" class="invalid-feedback">
+                <div *ngIf="f['imageUrl'].errors['pattern']">Please enter a valid URL starting with http:// or https://</div>
+              </div>
+            </div>
+            
+            <!-- Image Preview -->
+            <div class="mb-3" *ngIf="f['imageUrl'].value">
+              <label class="form-label">Image Preview</label>
+              <div class="border rounded p-2 text-center bg-light">
+                <img 
+                  [src]="f['imageUrl'].value" 
+                  [alt]="f['name'].value" 
+                  class="img-fluid" 
+                  style="max-height: 200px; object-fit: contain;" 
+                  onerror="this.style.display='none'; this.nextElementSibling.style.display='block';"
+                >
+                <div style="display: none;" class="text-danger">
+                  <i class="bi bi-exclamation-triangle"></i> Invalid image URL or image cannot be loaded
+                </div>
+              </div>
+            </div>
+            
+            <!-- Submit and Cancel Buttons -->
+            <div class="d-flex gap-2">
+              <button type="submit" class="btn btn-success">
+                <i class="bi bi-check-circle"></i> {{ isEditMode ? 'Update Category' : 'Create Category' }}
+              </button>
+              <button type="button" class="btn btn-secondary" (click)="onCancel()">
+                <i class="bi bi-x-circle"></i> Cancel
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

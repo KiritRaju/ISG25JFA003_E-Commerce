@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
+import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { CategoryService } from '../../../core/services/category.service';
 import { CategoryRequestDTO, CategoryResponseDTO } from '../../../core/models/category';
@@ -8,52 +8,25 @@ import { CategoryRequestDTO, CategoryResponseDTO } from '../../../core/models/ca
 @Component({
   selector: 'app-category-form',
   standalone: true,
-  imports: [CommonModule, FormsModule],
-  template: `
-  <div class="container mt-4">
-    <h3>{{ isEditMode ? 'Edit Category' : 'Add New Category' }}</h3>
-    <form (ngSubmit)="onSubmit()">
-      <div class="mb-3">
-        <label for="name" class="form-label">Name</label>
-        <input id="name" class="form-control" [(ngModel)]="category.name" name="name" required>
-      </div>
-      <div class="mb-3">
-        <label for="description" class="form-label">Description</label>
-        <textarea id="description" class="form-control" [(ngModel)]="category.description" name="description" required></textarea>
-      </div>
-      <div class="mb-3">
-        <label for="imageUrl" class="form-label">Image URL</label>
-        <input id="imageUrl" type="url" class="form-control" [(ngModel)]="category.imageUrl" name="imageUrl" placeholder="https://example.com/image.jpg">
-        <small class="form-text text-muted">Enter the URL of the category image</small>
-      </div>
-      <div class="mb-3" *ngIf="category.imageUrl">
-        <label class="form-label">Image Preview</label>
-        <div class="border rounded p-2 text-center bg-light">
-          <img [src]="category.imageUrl" [alt]="category.name" class="img-fluid" style="max-height: 200px; object-fit: contain;" 
-               onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
-          <div style="display: none;" class="text-danger">
-            <i class="bi bi-exclamation-triangle"></i> Invalid image URL
-          </div>
-        </div>
-      </div>
-      <button type="submit" class="btn btn-success">{{ isEditMode ? 'Update' : 'Create' }}</button>
-      <button type="button" class="btn btn-secondary ms-2" (click)="onCancel()">Cancel</button>
-    </form>
-  </div>
-  `
+  imports: [CommonModule, ReactiveFormsModule],
+  templateUrl: './category-form.component.html',
+  styleUrls: ['./category-form.component.scss']
 })
 export class CategoryFormComponent implements OnInit {
-  category: CategoryRequestDTO = { name: '', description: '', imageUrl: '' };
+  categoryForm!: FormGroup;
   isEditMode = false;
   categoryId: number | null = null;
+  submitted = false;
 
   constructor(
+    private fb: FormBuilder,
     private categoryService: CategoryService,
     private route: ActivatedRoute,
     private router: Router
   ) {}
 
   ngOnInit(): void {
+    this.initializeForm();
     this.route.paramMap.subscribe(params => {
       const id = params.get('id');
       if (id) {
@@ -64,23 +37,43 @@ export class CategoryFormComponent implements OnInit {
     });
   }
 
+  initializeForm(): void {
+    this.categoryForm = this.fb.group({
+      name: ['', [Validators.required, Validators.minLength(3), Validators.maxLength(50)]],
+      description: ['', [Validators.required, Validators.minLength(10), Validators.maxLength(200)]],
+      imageUrl: ['', [Validators.pattern(/^https?:\/\/.+/)]]
+    });
+  }
+
+  // Getter for easy access to form controls
+  get f() { return this.categoryForm.controls; }
+
   loadCategory(id: number): void {
     this.categoryService.getCategoryById(id).subscribe((data: CategoryResponseDTO) => {
-      this.category = {
+      this.categoryForm.patchValue({
         name: data.name,
         description: data.description,
         imageUrl: data.imageUrl || ''
-      };
+      });
     });
   }
 
   onSubmit(): void {
+    this.submitted = true;
+
+    // Stop if form is invalid
+    if (this.categoryForm.invalid) {
+      return;
+    }
+
+    const categoryData: CategoryRequestDTO = this.categoryForm.value;
+
     if (this.isEditMode && this.categoryId) {
-      this.categoryService.updateCategory(this.categoryId, this.category).subscribe(() => {
+      this.categoryService.updateCategory(this.categoryId, categoryData).subscribe(() => {
         this.router.navigate(['/admin/categories']);
       });
     } else {
-      this.categoryService.createCategory(this.category).subscribe(() => {
+      this.categoryService.createCategory(categoryData).subscribe(() => {
         this.router.navigate(['/admin/categories']);
       });
     }
