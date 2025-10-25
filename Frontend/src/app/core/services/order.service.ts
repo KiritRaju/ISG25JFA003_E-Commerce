@@ -25,6 +25,7 @@ export interface OrderResponseDTO {
   status: string;
   placed_at: string;
   orderItems: any[]; // Define a proper interface for OrderItem if needed
+  deliveryDate?: string;
 }
 
 @Injectable({
@@ -88,7 +89,7 @@ export class OrderService {
                             )
                         );
                         return forkJoin(productDetailsRequests).pipe(
-                            map(itemsWithProduct => ({ ...currentOrder, orderItems: itemsWithProduct }))
+                            map(itemsWithProduct => ({ ...currentOrder, orderItems: itemsWithProduct, deliveryDate: currentOrder.deliveryDate }))
                         );
                     } else {
                         return of(currentOrder || null);
@@ -156,6 +157,15 @@ export class OrderService {
         );
     }
 
+<<<<<<< HEAD
+    updateOrderStatus(orderId: number, status: string, deliveryDate?: string): Observable<Order> {
+        const body: any = { status };
+        if (deliveryDate) {
+            body.deliveryDate = deliveryDate;
+        }
+        return this.http.put<Order>(`${this.apiUrl}/admin/${orderId}/status`, body).pipe(
+            catchError(this.handleError)
+=======
     updateOrderStatus(orderId: number, status: string): Observable<Order> {
         return this.http.put<Order>(`${this.apiUrl}/admin/${orderId}/status?status=${status}`, {}).pipe(
             tap(() => this.notificationService.showSuccess(`Order status updated to ${status}`)),
@@ -163,6 +173,7 @@ export class OrderService {
                 this.notificationService.showError('Failed to update order status');
                 return this.handleError(err);
             })
+>>>>>>> 284f546eeb7577fdd6daffb46a4bf8d7ac28ffcc
         );
     }
 
@@ -193,13 +204,13 @@ export class OrderService {
                 if (orders && orders.length > 0) {
                     const ordersWithProductDetails = orders.map(order => {
                         if (order.orderItems && order.orderItems.length > 0) {
-                            const productDetailsRequests = order.orderItems.map(item =>
+                            const itemRequests = order.orderItems.map(item =>
                                 this.productService.getProductById(item.productId).pipe(
                                     map(product => ({ ...item, product }))
                                 )
                             );
-                            return forkJoin(productDetailsRequests).pipe(
-                                map(itemsWithProduct => ({ ...order, orderItems: itemsWithProduct }))
+                            return forkJoin(itemRequests).pipe(
+                                map(itemsWithProduct => ({ ...order, orderItems: itemsWithProduct, deliveryDate: order.deliveryDate }))
                             );
                         } else {
                             return of(order);
