@@ -1,10 +1,11 @@
-import { Component, HostListener, OnInit, inject } from '@angular/core';
+import { Component, HostListener, OnInit, inject, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { CartService } from '../../../core/services/cart.service'; // Import CartService
 import { CartResponse } from '../../../core/models/cart'; // Import CartResponse
 import { AuthService } from '../../../core/services/auth.service';
 import { Router } from '@angular/router';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-navbar',
@@ -13,7 +14,7 @@ import { Router } from '@angular/router';
   templateUrl: './navbar.component.html',
   styleUrls: ['./navbar.component.scss']
 })
-export class NavbarComponent implements OnInit {
+export class NavbarComponent implements OnInit, OnDestroy {
   isScrolled = false;
   cartItemCount = 0; // New property
   isLoggedIn = false;
@@ -21,31 +22,35 @@ export class NavbarComponent implements OnInit {
   private cartService = inject(CartService); // Inject CartService
   private authService = inject(AuthService);
   private router = inject(Router);
+  private cartCountSubscription?: Subscription;
+  private authSubscription?: Subscription;
 
   ngOnInit(): void { // Implemented OnInit
-    this.loadCartItemCount();
-    this.authService.loggedIn$.subscribe(isLoggedIn => {
+    // Subscribe to cart count changes
+    this.cartCountSubscription = this.cartService.cartCount$.subscribe(count => {
+      this.cartItemCount = count;
+    });
+
+    this.authSubscription = this.authService.loggedIn$.subscribe(isLoggedIn => {
       this.isLoggedIn = isLoggedIn;
       const user = this.authService.getCurrentUser();
       this.isAdmin = !!(user && (user.role === 'ADMIN' || user.role === 'ROLE_ADMIN'));
     });
   }
 
+  ngOnDestroy(): void {
+    // Clean up subscriptions
+    if (this.cartCountSubscription) {
+      this.cartCountSubscription.unsubscribe();
+    }
+    if (this.authSubscription) {
+      this.authSubscription.unsubscribe();
+    }
+  }
+
   @HostListener('window:scroll', [])
   onWindowScroll() {
     this.isScrolled = window.scrollY > 50;
-  }
-
-  private loadCartItemCount(): void {
-    this.cartService.getCart().subscribe({
-        next: (cart: CartResponse | null) => {
-            this.cartItemCount = cart?.items?.reduce((sum: number, item: any) => sum + item.quantity, 0) || 0;
-        },
-        error: (error) => {
-            console.error('Error loading cart item count in navbar:', error);
-            this.cartItemCount = 0;
-        }
-    });
   }
 
   logout(): void {

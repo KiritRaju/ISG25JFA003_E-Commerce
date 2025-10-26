@@ -1,36 +1,115 @@
-<div class="checkout-dialog-container">
-  <app-loader *ngIf="isLoading" [overlay]="true" message="Loading checkout options..."></app-loader>
-  <app-error-message *ngIf="error" [message]="error" (retryClick)="loadCheckoutData()"></app-error-message>
+<div class="container p-0">
+  @if (isLoading()) {
+    <app-loader [overlay]="true" message="Loading checkout options..."></app-loader>
+  }
+  @if (error()) {
+    <app-error-message [message]="error()!" (retryClick)="loadCheckoutData()"></app-error-message>
+  }
 
-  <div *ngIf="!isLoading && !error" class="checkout-card p-3">
-    <h4 class="mb-3">Complete Your Order</h4>
+  @if (!isLoading() && !error()) {
+    <div class="card border-0 shadow-lg rounded-4 bg-white bg-opacity-75 position-relative overflow-hidden" style="backdrop-filter: blur(15px);">
+      <!-- Top accent bar -->
+      <div class="position-absolute top-0 start-0 end-0" style="height: 4px; background: linear-gradient(90deg, rgba(255, 101, 0, 0.8), rgba(255, 140, 50, 0.8), rgba(255, 180, 100, 0.8));"></div>
+      
+      <div class="card-body p-4">
+        <!-- Header -->
+        <div class="pb-3 mb-4 border-bottom border-warning border-opacity-25">
+          <div class="d-flex align-items-center">
+            <div class="rounded-3 me-3 d-flex align-items-center justify-content-center" 
+                 style="width: 48px; height: 48px; background: linear-gradient(135deg, rgba(255, 101, 0, 0.15), rgba(255, 140, 50, 0.25));">
+              <i class="bi bi-bag-check-fill fs-4 text-warning"></i>
+            </div>
+            <div>
+              <h3 class="mb-1 fw-bold text-dark" style="letter-spacing: -0.5px;">Complete Your Order</h3>
+              <p class="mb-0 text-secondary small">Review and confirm your purchase</p>
+            </div>
+          </div>
+        </div>
 
-    <div class="mb-3">
-      <h6>Select Shipping Address:</h6>
-      <div *ngIf="addresses.length === 0" class="alert alert-warning">No addresses found. Please add one in your profile.</div>
-      <select *ngIf="addresses.length > 0" class="form-select" [(ngModel)]="selectedAddressId">
-        <option [ngValue]="null" disabled>Choose an address...</option>
-        <option *ngFor="let address of addresses" [ngValue]="address.id">
-          {{ address.address_line1 }}, {{ address.city }}, {{ address.state }} {{ address.postal_code }}, {{ address.country }}
-        </option>
-      </select>
+        <!-- Shipping Address Section -->
+        <div class="card bg-white bg-opacity-50 border-white border-opacity-75 rounded-3 mb-3 p-3 section-hover" style="backdrop-filter: blur(10px); transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); cursor: pointer;">
+          <div class="d-flex align-items-center pb-2 mb-3 border-bottom border-warning border-opacity-10">
+            <i class="bi bi-geo-alt-fill text-warning me-2"></i>
+            <h6 class="mb-0 fw-semibold text-dark">Shipping Address</h6>
+          </div>
+          <div class="pt-2">
+            @if (!hasAddresses()) {
+              <div class="alert alert-warning d-flex align-items-center mb-0 rounded-3 border-0" style="background: rgba(255, 193, 7, 0.15); backdrop-filter: blur(10px);">
+                <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                <span class="small">No addresses found. Please add one in your profile.</span>
+              </div>
+            }
+            @if (hasAddresses()) {
+              <select class="form-select rounded-3 border-secondary border-opacity-25 fw-medium py-2 px-3 select-enhanced" 
+                      [(ngModel)]="addressId"
+                      style="background: rgba(248, 249, 250, 0.6); backdrop-filter: blur(5px); transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);">
+                <option [ngValue]="null" disabled>Choose a shipping address...</option>
+                @for (address of addresses(); track address.id) {
+                  <option [ngValue]="address.id">
+                    <i class="bi bi-house-door"></i> {{ address.address_line1 }}, {{ address.city }}, {{ address.state }} {{ address.postal_code }}, {{ address.country }}
+                  </option>
+                }
+              </select>
+              @if (selectedAddressId()) {
+                <div class="d-flex align-items-center mt-2 animate-fade-in">
+                  <i class="bi bi-check-circle-fill text-success me-1 small"></i>
+                  <small class="text-success fw-semibold">Address selected</small>
+                </div>
+              }
+            }
+          </div>
+        </div>
+
+        <!-- Payment Method Section -->
+        <div class="card bg-white bg-opacity-50 border-white border-opacity-75 rounded-3 mb-4 p-3 section-hover" style="backdrop-filter: blur(10px); transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); cursor: pointer;">
+          <div class="d-flex align-items-center pb-2 mb-3 border-bottom border-warning border-opacity-10">
+            <i class="bi bi-credit-card-fill text-warning me-2"></i>
+            <h6 class="mb-0 fw-semibold text-dark">Payment Method</h6>
+          </div>
+          <div class="pt-2">
+            @if (!hasPaymentMethods()) {
+              <div class="alert alert-warning d-flex align-items-center mb-0 rounded-3 border-0" style="background: rgba(255, 193, 7, 0.15); backdrop-filter: blur(10px);">
+                <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                <span class="small">No payment methods found. Please add one in your profile.</span>
+              </div>
+            }
+            @if (hasPaymentMethods()) {
+              <select class="form-select rounded-3 border-secondary border-opacity-25 fw-medium py-2 px-3 select-enhanced" 
+                      [(ngModel)]="paymentMethodId"
+                      style="background: rgba(248, 249, 250, 0.6); backdrop-filter: blur(5px); transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);">
+                <option [ngValue]="null" disabled>Choose a payment method...</option>
+                @for (method of paymentMethods(); track method.paymentMethodId) {
+                  <option [ngValue]="method.paymentMethodId">
+                    <i class="bi bi-credit-card"></i> {{ method.cardType }} •••• {{ method.lastFourDigits }} ({{ method.cardholderName }})
+                  </option>
+                }
+              </select>
+              @if (selectedPaymentMethodId()) {
+                <div class="d-flex align-items-center mt-2 animate-fade-in">
+                  <i class="bi bi-check-circle-fill text-success me-1 small"></i>
+                  <small class="text-success fw-semibold">Payment method selected</small>
+                </div>
+              }
+            }
+          </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="d-flex justify-content-between align-items-center pt-3 mt-3 border-top border-warning border-opacity-25">
+          <button class="btn btn-outline-secondary rounded-3 px-4 py-2 fw-semibold" 
+                  (click)="closeDialog()"
+                  style="background: rgba(248, 249, 250, 0.5); backdrop-filter: blur(5px); transition: all 0.3s ease;">
+            <i class="bi bi-x-circle me-1"></i> Cancel
+          </button>
+          <button class="btn btn-warning rounded-3 px-4 py-2 fw-semibold text-white position-relative overflow-hidden btn-gradient" 
+                  (click)="placeOrder()"
+                  [disabled]="!canPlaceOrder()"
+                  style="background: linear-gradient(135deg, rgba(255, 101, 0, 0.8), rgba(255, 140, 50, 0.9)); box-shadow: 0 4px 12px rgba(255, 101, 0, 0.3); transition: all 0.3s ease;">
+            <i class="bi bi-cart-check me-1"></i> Place Order
+            <i class="bi bi-arrow-right ms-1"></i>
+          </button>
+        </div>
+      </div>
     </div>
-
-    <div class="mb-3">
-      <h6>Select Payment Method:</h6>
-      <div *ngIf="paymentMethods.length === 0" class="alert alert-warning">No payment methods found. Please add one in your profile.</div>
-      <select *ngIf="paymentMethods.length > 0" class="form-select" [(ngModel)]="selectedPaymentMethodId">
-        <option [ngValue]="null" disabled>Choose a payment method...</option>
-        <option *ngFor="let method of paymentMethods" [ngValue]="method.paymentMethodId">
-          {{ method.cardType }} ending in {{ method.lastFourDigits }} (Cardholder: {{ method.cardholderName }})
-        </option>
-      </select>
-    </div>
-
-    <div class="d-flex justify-content-end gap-2">
-      <button class="btn btn-outline-secondary btn-sm" (click)="closeDialog()">Cancel</button>
-      <button class="btn btn-primary btn-sm" (click)="placeOrder()"
-              [disabled]="!selectedAddressId || !selectedPaymentMethodId">Place Order</button>
-    </div>
-  </div>
+  }
 </div>

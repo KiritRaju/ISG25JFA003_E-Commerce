@@ -1,103 +1,95 @@
-.checkout-dialog-container {
-    min-width: 450px;
-    max-width: 800px;
-    margin: 1px;
+/* Checkout Dialog - Bootstrap Enhanced Styles */
+
+/* Glassmorphism effects */
+.bg-white.bg-opacity-75 {
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
 }
 
-.checkout-card {
-    background: rgba(255, 255, 255, 0.4);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-    border-radius: 12px;
-    border: 2px solid rgba(255, 255, 255, 0.5);
-    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
+/* Section hover effects */
+.section-hover:hover {
+    background: rgba(255, 255, 255, 0.75) !important;
+    box-shadow: 0 8px 24px rgba(255, 101, 0, 0.15) !important;
+    border-color: rgba(255, 101, 0, 0.3) !important;
+    transform: translateY(-4px) scale(1.01);
+}
+
+/* Enhanced select styling */
+.select-enhanced:focus {
+    border-color: rgba(255, 101, 0, 0.6) !important;
+    background: rgba(255, 255, 255, 0.9) !important;
+    box-shadow: 0 0 0 0.25rem rgba(255, 101, 0, 0.1) !important;
+    outline: none;
+    transform: scale(1.02);
+}
+
+.select-enhanced:hover {
+    border-color: rgba(255, 101, 0, 0.5) !important;
+    background: rgba(255, 255, 255, 0.8) !important;
+    box-shadow: 0 4px 12px rgba(255, 101, 0, 0.15) !important;
+    transform: translateY(-2px);
+}
+
+.select-enhanced option {
+    background: #fff;
     color: #0B2545;
-    transition: all 0.3s ease;
+    padding: 0.5rem;
+}
+
+/* Fade-in animation */
+.animate-fade-in {
+    animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-5px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Button hover effects */
+.btn-outline-secondary:hover {
+    background: rgba(248, 249, 250, 0.8) !important;
+    border-color: rgba(108, 117, 125, 0.5) !important;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* Gradient button with shimmer effect */
+.btn-gradient {
     position: relative;
+    overflow: hidden;
 
     &::before {
         content: '';
         position: absolute;
-        top: -2px;
-        left: -2px;
-        right: -2px;
-        bottom: -2px;
-        background: linear-gradient(135deg, rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0.1));
-        border-radius: 14px;
-        z-index: -1;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+        transition: left 0.5s ease;
     }
 
-    &:hover {
-        background: rgba(255, 255, 255, 0.5);
-        box-shadow: 0 12px 24px rgba(0, 0, 0, 0.2);
-        border-color: rgba(255, 255, 255, 0.7);
-    }
-}
-
-h4, h6 {
-    color: #0B2545;
-    font-weight: 600;
-}
-
-h4 {
-    font-size: 1.1rem;
-}
-
-h6 {
-    font-size: 0.9rem;
-    margin-bottom: 0.5rem;
-}
-
-.form-select {
-    background: rgba(248, 249, 250, 0.5);
-    backdrop-filter: blur(5px);
-    -webkit-backdrop-filter: blur(5px);
-    border: 1px solid rgba(222, 226, 230, 0.3);
-    border-radius: 6px;
-    color: #0B2545;
-    padding: 0.5rem 0.75rem;
-    font-size: 0.875rem;
-    transition: all 0.2s ease;
-
-    &:focus {
-        border-color: #EE7B30;
-        background: rgba(248, 249, 250, 0.6);
-        box-shadow: 0 0 0 0.15rem rgba(238, 123, 48, 0.15);
-        outline: none;
-    }
-
-    option {
-        background: #fff;
-        color: #0B2545;
-    }
-}
-
-.btn-sm {
-    padding: 0.5rem 1rem;
-    font-size: 0.875rem;
-    border-radius: 6px;
-    font-weight: 500;
-}
-
-.btn-primary {
-    background: #2ECC71;
-    border-color: #2ECC71;
-    
     &:hover:not(:disabled) {
-        background: #27AE60;
-        border-color: #27AE60;
-    }
-    
-    &:disabled {
-        opacity: 0.6;
-        cursor: not-allowed;
-    }
-}
+        background: linear-gradient(135deg, rgba(255, 101, 0, 0.9), rgba(255, 140, 50, 1)) !important;
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(255, 101, 0, 0.4) !important;
 
-.btn-outline-secondary {
-    &:hover {
-        background: rgba(248, 249, 250, 0.5);
-        backdrop-filter: blur(5px);
-        -webkit-backdrop-filter: blur(5px);
+        &::before {
+            left: 100%;
+        }
+    }
+
+    &:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+        background: linear-gradient(135deg, rgba(255, 101, 0, 0.4), rgba(255, 140, 50, 0.5)) !important;
+        box-shadow: none !important;
     }
 }

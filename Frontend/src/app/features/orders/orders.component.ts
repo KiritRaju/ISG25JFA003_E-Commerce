@@ -10,7 +10,7 @@ import { OrderService } from '../../core/services/order.service';
 import { Payment, PaymentStatus, PaymentType } from '../../core/models/payment.model';
 import { AuthService } from '../../core/services/auth.service';
 import { RazorpayService, RazorpayPaymentResponse } from '../../core/services/razorpay.service';
-import { Order } from '../../shared/models/order.model';
+import { Order } from '../../core/models/order.model';
 
 @Component({
     selector: 'app-orders',
@@ -173,7 +173,7 @@ export class OrdersComponent {
 
 
     private updateOrderStatus(orderId: number, status: string, deliveryDate?: string): void {
-        this.orderService.updateOrderStatus(orderId, status, deliveryDate).subscribe({
+        this.orderService.updateOrderStatus(orderId, status).subscribe({
             next: (order) => {
                 console.log('Order status updated to:', status);
             },

@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { CategoryService } from '../../../core/services/category.service';
 import { ProductService } from '../../../core/services/product.service';
@@ -20,31 +20,27 @@ interface CategoryWithCount {
   templateUrl: './categories.html'
 })
 export class CategoriesComponent implements OnInit {
-  categories: CategoryWithCount[] = [];
-  isLoading = true;
+  categories = signal<CategoryWithCount[]>([]);
+  isLoading = signal<boolean>(true);
 
-  constructor(
-    private categoryService: CategoryService,
-    private productService: ProductService,
-    private router: Router
-  ) {}
+  private categoryService = inject(CategoryService);
+  private productService = inject(ProductService);
+  private router = inject(Router);
 
   ngOnInit(): void {
     this.loadCategories();
   }
 
   loadCategories(): void {
-    this.isLoading = true;
+    this.isLoading.set(true);
     
-    // Fetch both categories and products
     forkJoin({
       categories: this.categoryService.getAllCategories(),
       products: this.productService.getAllProducts()
     }).subscribe({
       next: ({ categories, products }) => {
-        // Map categories with product counts
-        this.categories = categories
-          .slice(0, 4) // Show only first 4 categories
+        this.categories.set(categories
+          .slice(0, 4)
           .map(cat => {
             const productCount = products.filter(p => 
               p.category_id === cat.id && p.is_active
@@ -57,13 +53,13 @@ export class CategoriesComponent implements OnInit {
               image: cat.imageUrl || 'https://images.unsplash.com/photo-1556740758-90de374c12ad?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080',
               productCount: productCount
             };
-          });
+          }));
         
-        this.isLoading = false;
+        this.isLoading.set(false);
       },
       error: (err) => {
         console.error('Failed to load categories:', err);
-        this.isLoading = false;
+        this.isLoading.set(false);
       }
     });
   }

@@ -1,61 +1,57 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { CartService } from '../../../core/services/cart.service';
 import { CartResponse, CartItemResponse, CartItemRequest } from '../../../core/models/cart';
-import { MatDialog, MatDialogModule } from '@angular/material/dialog'; // Import MatDialog and MatDialogModule
-import { CheckoutDialogComponent } from '../checkout-dialog/checkout-dialog'; // Import CheckoutDialogComponent
-import { Router } from '@angular/router'; // Import Router
-import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar'; // Import MatSnackBar and MatSnackBarModule
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
+import { CheckoutDialogComponent } from '../checkout-dialog/checkout-dialog';
+import { Router } from '@angular/router';
+import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 
 @Component({
   selector: 'app-cart',
   standalone: true,
-  imports: [CommonModule, MatDialogModule, MatSnackBarModule], // Add MatSnackBarModule to imports
+  imports: [CommonModule, MatDialogModule, MatSnackBarModule],
   templateUrl: './cart.html',
   styleUrls: ['./cart.scss']
 })
 export class CartComponent implements OnInit {
-  cart: CartResponse | null = null;
-  isLoading = true;
-  error: string | null = null;
+  // Using signals for reactive state management (Angular 20)
+  cart = signal<CartResponse | null>(null);
+  isLoading = signal<boolean>(true);
+  error = signal<string | null>(null);
   
-  constructor(
-    private cartService: CartService,
-    private dialog: MatDialog,
-    private router: Router,
-    private snackBar: MatSnackBar // Inject MatSnackBar
-  ) { }
+  // Computed signals (Angular 20)
+  totalItems = computed(() => {
+    const currentCart = this.cart();
+    if (!currentCart || !currentCart.items) {
+      return 0;
+    }
+    return currentCart.items.reduce((sum, item) => sum + item.quantity, 0);
+  });
+
+  // Inject dependencies using inject() function (Angular 20)
+  private cartService = inject(CartService);
+  private dialog = inject(MatDialog);
+  private router = inject(Router);
+  private snackBar = inject(MatSnackBar);
 
   ngOnInit(): void {
     this.loadCart();
   }
 
   loadCart(): void {
-    this.isLoading = true;
-    this.error = null;
+    this.isLoading.set(true);
+    this.error.set(null);
     this.cartService.getCart().subscribe({
       next: (data) => {
-        console.log('Cart data received:', data); // Debug log
-        this.cart = data;
-        this.isLoading = false;
+        this.cart.set(data);
+        this.isLoading.set(false);
       },
       error: (err) => {
-        this.cart = null; 
-        this.isLoading = false;
-        this.error = "Failed to load cart. Please try again.";
+        this.cart.set(null);
+        this.isLoading.set(false);
+        this.error.set("Failed to load cart. Please try again.");
         console.error('Failed to load cart:', err);
-        // Detailed error logging
-        if (err.error instanceof ErrorEvent) {
-          // Client-side error
-          console.error('Client error:', err.error.message);
-        } else {
-          // Server-side error
-          console.error('Server error:', {
-            status: err.status,
-            message: err.message,
-            error: err.error
-          });
-        }
       }
     });
   }
@@ -66,14 +62,20 @@ export class CartComponent implements OnInit {
     
     this.cartService.removeCartItem(itemId).subscribe({
       next: () => {
-        if (this.cart) {
-          // Remove item locally
-          this.cart.items = this.cart.items.filter(item => item.id !== itemId);
+        const currentCart = this.cart();
+        if (currentCart) {
+          this.cart.update(cart => {
+            if (!cart) return cart;
+            return {
+              ...cart,
+              items: cart.items.filter(item => item.id !== itemId)
+            };
+          });
           this.recalculateCartTotal();
         }
       },
       error: (err) => {
-        this.error = 'Failed to remove item.'; 
+        this.error.set('Failed to remove item.');
         console.error('Error removing item:', err);
       }
     });
@@ -93,35 +95,38 @@ export class CartComponent implements OnInit {
 
     this.cartService.updateCartItem(item.id, itemRequest).subscribe({
       next: (updatedItem) => {
-        // Update local data instead of reloading
-        if (this.cart) {
-          const index = this.cart.items.findIndex(i => i.id === updatedItem.id);
+        this.cart.update(cart => {
+          if (!cart) return cart;
+          const index = cart.items.findIndex((i: CartItemResponse) => i.id === updatedItem.id);
           if (index !== -1) {
-            this.cart.items[index] = updatedItem;
-            this.recalculateCartTotal();
+            const newItems = [...cart.items];
+            newItems[index] = updatedItem;
+            return { ...cart, items: newItems };
           }
-        }
+          return cart;
+        });
+        this.recalculateCartTotal();
       },
       error: (err) => {
         this.snackBar.open('Failed to update quantity. The item may be out of stock.', 'Dismiss', { duration: 3000 });
-        inputElement.value = item.quantity.toString(); // Reset the input value
+        inputElement.value = item.quantity.toString();
       }
     });
   }
   
   clearCart(): void {
-    if (!this.cart || !confirm('Are you sure you want to empty your entire cart?')) return;
+    const currentCart = this.cart();
+    if (!currentCart || !confirm('Are you sure you want to empty your entire cart?')) return;
     
     this.cartService.clearCart().subscribe({
       next: () => {
-        // Update local state
-        if (this.cart) {
-          this.cart.items = [];
-          this.cart.totalPrice = 0;
-        }
+        this.cart.update(cart => {
+          if (!cart) return cart;
+          return { ...cart, items: [], totalPrice: 0 };
+        });
       },
-      error: (err) => { 
-        this.error = 'Failed to clear the cart.'; 
+      error: (err) => {
+        this.error.set('Failed to clear the cart.');
         console.error('Error clearing cart:', err);
       }
     });
@@ -132,16 +137,14 @@ export class CartComponent implements OnInit {
       width: '600px',
       height: 'auto',
       maxHeight: '90vh',
-      disableClose: true, // Prevent closing by clicking outside or pressing escape
-      panelClass: 'checkout-dialog-panel' // Add custom panel class for styling
+      disableClose: true,
+      panelClass: 'checkout-dialog-panel'
     });
 
     dialogRef.afterClosed().subscribe(result => {
       if (result === 'orderPlaced') {
-        // Order was successfully placed, navigate to orders page
         this.router.navigate(['/orders']);
       }
-      // If dialog was cancelled or closed without placing order, do nothing
     });
   }
 
@@ -150,48 +153,15 @@ export class CartComponent implements OnInit {
   }
 
   private recalculateCartTotal(): void {
-    if (this.cart) {
-      this.cart.totalPrice = this.cart.items.reduce((total, item) => {
+    this.cart.update(cart => {
+      if (!cart) return cart;
+      const totalPrice = cart.items.reduce((total: number, item: CartItemResponse) => {
         return total + (Number(item.price) * Number(item.quantity));
       }, 0);
-    }
+      return { ...cart, totalPrice };
+    });
   }
 
-  get totalItems(): number {
-    if (!this.cart || !this.cart.items) {
-      return 0;
-    }
-    return this.cart.items.reduce((sum, item) => sum + item.quantity, 0);
-  }
-
-  getProductImage(productName: string): string {
-    const imageMap: { [key: string]: string } = {
-      'Atomic Habits': '/atomichabitsbk.jpg',
-      'The Alchemist': '/thealchemistbk.jpg',
-      'Clean Code': '/cleancodebk.jpg',
-      'Headset': '/headset.jpg',
-      'Kettle': '/kettle.jpg',
-      'LED TV': '/ledtv.jpg',
-      'Lipstick': '/lipstick.jpg',
-      'Pan': '/pan.jpg',
-      'Pillow': '/pillow.jpg',
-      'Serum': '/serum.jpg',
-      'Shampoo': '/shampoo.jpg',
-      'Smartwatch': '/smartwatch.jpg'
-    };
-    
-    if (imageMap[productName]) {
-      return imageMap[productName];
-    }
-    
-    for (const key in imageMap) {
-      if (productName.toLowerCase().includes(key.toLowerCase())) {
-        return imageMap[key];
-      }
-    }
-    
-    return '/favicon.ico';
-  }
 
   incrementQuantity(item: CartItemResponse, event: Event): void {
     event.stopPropagation();
@@ -200,13 +170,17 @@ export class CartComponent implements OnInit {
 
     this.cartService.updateCartItem(item.id, itemRequest).subscribe({
       next: (updatedItem) => {
-        if (this.cart) {
-          const index = this.cart.items.findIndex(i => i.id === updatedItem.id);
+        this.cart.update(cart => {
+          if (!cart) return cart;
+          const index = cart.items.findIndex((i: CartItemResponse) => i.id === updatedItem.id);
           if (index !== -1) {
-            this.cart.items[index] = updatedItem;
-            this.recalculateCartTotal();
+            const newItems = [...cart.items];
+            newItems[index] = updatedItem;
+            return { ...cart, items: newItems };
           }
-        }
+          return cart;
+        });
+        this.recalculateCartTotal();
       },
       error: (err) => {
         this.snackBar.open('Failed to update quantity.', 'Dismiss', { duration: 3000 });
@@ -223,13 +197,17 @@ export class CartComponent implements OnInit {
 
     this.cartService.updateCartItem(item.id, itemRequest).subscribe({
       next: (updatedItem) => {
-        if (this.cart) {
-          const index = this.cart.items.findIndex(i => i.id === updatedItem.id);
+        this.cart.update(cart => {
+          if (!cart) return cart;
+          const index = cart.items.findIndex((i: CartItemResponse) => i.id === updatedItem.id);
           if (index !== -1) {
-            this.cart.items[index] = updatedItem;
-            this.recalculateCartTotal();
+            const newItems = [...cart.items];
+            newItems[index] = updatedItem;
+            return { ...cart, items: newItems };
           }
-        }
+          return cart;
+        });
+        this.recalculateCartTotal();
       },
       error: (err) => {
         this.snackBar.open('Failed to update quantity.', 'Dismiss', { duration: 3000 });

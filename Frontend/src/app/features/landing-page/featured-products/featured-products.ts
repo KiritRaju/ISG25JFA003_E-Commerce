@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ProductService } from '../../../core/services/product.service';
 import { CartService } from '../../../core/services/cart.service';
@@ -14,34 +14,31 @@ import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
   templateUrl: './featured-products.html'
 })
 export class FeaturedProductsComponent implements OnInit {
-  products: ProductResponseDTO[] = [];
-  isLoading = true;
+  products = signal<ProductResponseDTO[]>([]);
+  isLoading = signal<boolean>(true);
 
-  constructor(
-    private productService: ProductService,
-    private cartService: CartService,
-    private authService: AuthService,
-    private router: Router,
-    private snackBar: MatSnackBar
-  ) {}
+  private productService = inject(ProductService);
+  private cartService = inject(CartService);
+  private authService = inject(AuthService);
+  private router = inject(Router);
+  private snackBar = inject(MatSnackBar);
 
   ngOnInit(): void {
     this.loadProducts();
   }
 
   loadProducts(): void {
-    this.isLoading = true;
+    this.isLoading.set(true);
     this.productService.getAllProducts().subscribe({
       next: (data) => {
-        // Get only active products, limit to 4 for featured section
-        this.products = data
+        this.products.set(data
           .filter(p => p.is_active)
-          .slice(0, 4);
-        this.isLoading = false;
+          .slice(0, 4));
+        this.isLoading.set(false);
       },
       error: (err) => {
         console.error('Failed to load products:', err);
-        this.isLoading = false;
+        this.isLoading.set(false);
       }
     });
   }
