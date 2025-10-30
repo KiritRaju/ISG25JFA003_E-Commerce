@@ -18,3 +18,11 @@
   font-weight: bold;
   color: #556472; /* A distinct blue color */
 }
+
+.btn-primary {
+  border-radius: var(--bs-btn-border-radius) !important;
+}
+
+.btn-cart {
+  background-color: #ffb649 !important;
+}
